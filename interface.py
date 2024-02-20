@@ -2,11 +2,12 @@ import streamlit as st
 from tinydb import TinyDB, Query
 from PIL import Image
 import time
-from IPython.display import Video
+from io import BytesIO
+from songs import Song
+from database_start import DatabaseConnector
+import os
+import librosa
 
-# TinyDB-Verbindung
-db = TinyDB('music_database.json')
-music_table = db.table('music')
 
 # Logo einbinden
 logo_path = "Logo.jpg"  # Passe den Pfad zu deinem Logo an
@@ -28,6 +29,14 @@ col2.title(welcome_message)
 class MusicApp:
     def __init__(self):
         self.initialize_ui()
+        self.db_connector = DatabaseConnector('music_database.json')
+        self.initialize_ui()
+        self.create_temp_directory()
+
+    def create_temp_directory(self):
+        # Überprüfe, ob das temporäre Verzeichnis existiert, andernfalls erstelle es
+        if not os.path.exists('temp'):
+            os.makedirs('temp')
 
     def initialize_ui(self):
         st.header("Music Recognition")
@@ -55,9 +64,34 @@ class MusicApp:
 
         if st.button("Add"):
             if artist and title and file:
-                # Füge die Informationen zur Datenbank hinzu (Annahme: Die Funktion ist in der Musikerkennung implementiert)
-                # MusicRecognizer.learn_music(artist, title, file)
-                st.success(f"Music '{title}' by '{artist}' has been successfully learned.")
+                # Überprüfe, ob eine Datei hochgeladen wurde
+                if isinstance(file, BytesIO):
+                    # Speichere die hochgeladene Datei temporär
+                    temp_file_path = os.path.join("temp", file.name)
+                    with open(temp_file_path, "wb") as f:
+                        f.write(file.read())
+
+                    # Erstelle eine Instanz des Songs
+                    song = Song(artist, title, hashes=[])
+
+                    # Berechne das Spektrogramm und extrahiere die Fingerabdrücke
+                    song.generate_hashes()
+
+                    # Speichere den Song in der Datenbank
+                    song.save_to_database()
+
+                    # Gib eine Erfolgsmeldung aus
+                    st.success(f"Music '{title}' by '{artist}' has been successfully learned.")
+                else:
+                    st.error("Please upload an audio file.")
+
+                # Lösche die temporäre Datei
+                os.remove(temp_file_path)
+
+                # Lösche die Eingabefelder
+                st.text_input("Artist:", value="")
+                st.text_input("Title:", value="")
+                st.empty()  # Leerzeile einfügen, um das Drag-and-Drop-Menü nach dem Hochladen zu aktualisieren
 
     def recognize_workflow(self):
         st.session_state["state"] = "Identify Music"
@@ -83,10 +117,10 @@ class MusicApp:
         video_path = "listening.mp4"  # Passe den Pfad zu deinem Video an
 
         # IPython Video-Element mit Breite und Autoplay
-        video = Video(video_path, embed=True, width=400)
+        #video = Video(video_path, embed=True, width=400)
 
         # Anzeige des Videos
-        st.markdown(f"### Video Preview\n{video._repr_html_()}", unsafe_allow_html=True)
+        #st.markdown(f"### Video Preview\n{video._repr_html_()}", unsafe_allow_html=True)
 
         # Hier kannst du die UI-Elemente für das Lauschen von Musikstücken hinzufügen
         st.info("Listening... Please play the music to be recognized.")
