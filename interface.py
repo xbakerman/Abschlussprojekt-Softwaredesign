@@ -7,6 +7,7 @@ from songs import Song
 from database_start import DatabaseConnector
 import os
 import librosa
+from IPython.display import Video
 
 
 # Logo einbinden
@@ -25,18 +26,31 @@ col1.image(logo_image, use_column_width=False, width=200)  # Passe die Breite na
 # In der zweiten Spalte die Willkommensnachricht platzieren
 col2.title(welcome_message)
 
+def add_song_to_database(artist, title, audio_file):
+    # Verbindung zur Datenbank herstellen
+    db_connector = DatabaseConnector()
+    songs_table = db_connector.get_songs_table()
+
+    # Song in die Datenbank einfügen
+    new_song = Song(artist=artist, title=title, file_path=None, hashes=None)  # Dateipfad vorübergehend als None setzen
+    new_song.store()
+
+    # Dateiinhalt des Audio-Uploaders lesen
+    audio_content = audio_file.read()
+
+    # Dateipfad für den Song erstellen und Audioinhalt speichern
+    file_path = f"Samples/{title}.mp3"  # Beispiel-Pfad, anpassen nach Bedarf
+    with open(file_path, "wb") as f:
+        f.write(audio_content)
+
+    # Dateipfad in der Datenbank aktualisieren
+    new_song.file_path = file_path
+    new_song.store()
+
 
 class MusicApp:
     def __init__(self):
         self.initialize_ui()
-        self.db_connector = DatabaseConnector('music_database.json')
-        self.initialize_ui()
-        self.create_temp_directory()
-
-    def create_temp_directory(self):
-        # Überprüfe, ob das temporäre Verzeichnis existiert, andernfalls erstelle es
-        if not os.path.exists('temp'):
-            os.makedirs('temp')
 
     def initialize_ui(self):
         st.header("Music Recognition")
@@ -60,38 +74,18 @@ class MusicApp:
         # Hier kannst du die UI-Elemente für das Einlernen von Musikstücken hinzufügen
         artist = st.text_input("Artist:")
         title = st.text_input("Title:")
-        file = st.file_uploader("Upload file", type=["mp3", "wav"])
+        audio_file = st.file_uploader("Upload file", type=["mp3", "wav"])
 
-        if st.button("Add"):
-            if artist and title and file:
-                # Überprüfe, ob eine Datei hochgeladen wurde
-                if isinstance(file, BytesIO):
-                    # Speichere die hochgeladene Datei temporär
-                    temp_file_path = os.path.join("temp", file.name)
-                    with open(temp_file_path, "wb") as f:
-                        f.write(file.read())
-
-                    # Erstelle eine Instanz des Songs
-                    song = Song(artist, title, hashes=[])
-
-                    # Berechne das Spektrogramm und extrahiere die Fingerabdrücke
-                    song.generate_hashes()
-
-                    # Speichere den Song in der Datenbank
-                    song.save_to_database()
-
-                    # Gib eine Erfolgsmeldung aus
-                    st.success(f"Music '{title}' by '{artist}' has been successfully learned.")
-                else:
-                    st.error("Please upload an audio file.")
-
-                # Lösche die temporäre Datei
-                os.remove(temp_file_path)
-
-                # Lösche die Eingabefelder
-                st.text_input("Artist:", value="")
-                st.text_input("Title:", value="")
-                st.empty()  # Leerzeile einfügen, um das Drag-and-Drop-Menü nach dem Hochladen zu aktualisieren
+        if artist and title and audio_file:
+        # Überprüfen, ob eine Datei hochgeladen wurde
+            if isinstance(audio_file, BytesIO):
+                # Button zum Hinzufügen des Songs
+                if st.button("Add"):
+                    # Song zur Datenbank hinzufügen
+                    add_song_to_database(artist, title, audio_file)
+                    st.success("Song added successfully!")
+            else:
+                st.error("Please upload an audio file.")
 
     def recognize_workflow(self):
         st.session_state["state"] = "Identify Music"
@@ -117,10 +111,10 @@ class MusicApp:
         video_path = "listening.mp4"  # Passe den Pfad zu deinem Video an
 
         # IPython Video-Element mit Breite und Autoplay
-        #video = Video(video_path, embed=True, width=400)
+        video = Video(video_path, embed=True, width=400)
 
         # Anzeige des Videos
-        #st.markdown(f"### Video Preview\n{video._repr_html_()}", unsafe_allow_html=True)
+        st.markdown(f"### Video Preview\n{video._repr_html_()}", unsafe_allow_html=True)
 
         # Hier kannst du die UI-Elemente für das Lauschen von Musikstücken hinzufügen
         st.info("Listening... Please play the music to be recognized.")
