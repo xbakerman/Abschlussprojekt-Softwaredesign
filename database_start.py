@@ -14,22 +14,16 @@ class DatabaseConnector:
     # Turns the class into a naive singleton
     # --> not thread safe and doesn't handle inheritance particularly well
     __instance = None
-    def _new_(cls):
-        if cls.__instance is None:
-            cls._instance = super().new_(cls)
-            cls._instance.path = os.path.join(os.path.dirname(os.path.abspath(file_)), 'music_database.json')
-        return cls.__instance
-    
-    def get_songs_table(self) -> Table:
-        return TinyDB(self.__instance.path, storage=serializer).table('songs')
-    
-    
-    def __init__(self, db_path):
-        self.db_path = db_path
-        self.db = TinyDB(db_path)
 
-    def get_table(self, table_name):
-        return self.db.table(table_name)
+    def __new__(cls):
+        if cls.__instance is None:
+            cls.__instance = object.__new__(cls)
+            cls.__instance.path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'music_database.json')
+        return cls.__instance
+
+    def get_songs_table(self) -> Table:
+        return TinyDB(self.path, storage=serializer).table('songs')
 
 
 serializer = SerializationMiddleware(JSONStorage)
+

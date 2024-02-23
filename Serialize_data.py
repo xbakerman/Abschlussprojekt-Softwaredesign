@@ -1,68 +1,79 @@
 from abc import ABC, abstractmethod
+from database_start import DatabaseConnector
 from tinydb import Query
 
 class Serializable(ABC):
 
-    def _init_(self, id):
-        self.id = id
-
     @abstractmethod
-    def get_db_connector(self):
-        return None
-
-    def store(self):
-        print("Storing data...")
-
-        query = Query()
-        result = self.get_db_connector().search(query.id == self.id)
-        if result:
-            # Update the existing record with the current instance's data
-            result = self.get_db_connector().update(self.to_dict(), doc_ids=[result[0].doc_id])
-            print("Data updated.")
-        else:
-            # If the device doesn't exist, insert a new record
-            self.get_db_connector().insert(self.to_dict())
-            print("Data inserted.")
+    def __init__(self, id):
+        self.id = id
+    
+    @classmethod
+    def find_all(cls):
+        return cls.get_db_connector().all()
 
     @classmethod
     @abstractmethod
-    def load_data_by_id(cls, id):
-        pass
+    def get_db_connector(cls):
+        return None
+    
+    @classmethod
+    @abstractmethod
+    def load_by_id(cls, id):
+        query = Query()
+        result = cls.get_db_connector().search(query.id == id)
+        if result:
+            return result[0]
+        else:
+            return None
 
-    def delete(self):
+    def store(self) -> None:
+        print("  Storing data...")
+        query = Query()
+        result = self.get_db_connector().search(query.id == self.id)
+
+        if result:
+            result = self.get_db_connector().update(self.to_dict(), doc_ids=[result[0].doc_id])
+            print("  Data updated.")
+        else:
+            self.get_db_connector().insert(self.to_dict())
+            print("  Data inserted.")
+
+    def delete(self) -> None:
         query = Query()
         result = self.get_db_connector().remove(query.id == self.id)
-        print("xxxxxx deleted.")
 
-    #Do not modify this function unless you really know what you are doing!
-    def to_dict(self, obj=None):
+    def to_dict(self, *args):
         """
         This function converts an object recursively into a dict.
-        It is not neccessary to understand how this function works!
-        For the sake of simplicity it doesn't handle class attributes and callable objects like (callback) functions as attributes well
+        It is not necessary to understand how this function works!
         """
-        #If no object is passed to the function convert the object itself
-        if obj is None:
+
+        if len(args) > 0:
+            obj = args[0]
+        else:
             obj = self
 
         if isinstance(obj, dict):
-            #If the object is a dict try converting all its values into dicts also
             data = {}
             for (k, v) in obj.items():
                 data[k] = self.to_dict(v)
             return data
-        elif hasattr(obj, "_iter_") and not isinstance(obj, str):
-            #If the object is iterable (lists, etc.) try converting all its values into dicts
-            #Strings are also iterable, but theses should not be converted
+        elif hasattr(obj, "__iter__") and not isinstance(obj, str):
             data = [self.to_dict(v) for v in obj]
             return data
-        elif hasattr(obj, "_dict_"):
-            #If its an object that has a _dict_ attribute this can be used
+        elif hasattr(obj, "__dict__"):
             data = []
-            for k, v in obj._dict_.items():
-                #Iterate through all items of the _dict_ and and try converting each value to a dict
-                #The resulting key value pairs are stored as tuples in a list that is then converted to a final dict
+            for k, v in obj.__dict__.items():
                 data.append((k, self.to_dict(v)))
             return dict(data)
         else:
             return obj
+
+    @abstractmethod
+    def __str__(self) -> str:
+        pass
+
+    @abstractmethod
+    def __repr__(self) -> str:
+        pass
