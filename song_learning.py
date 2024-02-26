@@ -4,16 +4,15 @@ import librosa.display
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import fft, signal
-from scipy.ndimage import maximum_filter
-from scipy.ndimage import label
-from scipy.io import wavfile
-from scipy.signal import spectrogram
-from pydub import AudioSegment
 import hashlib
 from database_start import DatabaseConnector
-from songs import Song
+from songs import songs
+from scipy.io.wavfile import read
+from tinydb import Query
+import sqlite3
 
-# Funktion zum Generieren von Spektrogrammen
+
+
 def generate_spectrogram(audio_file_path):
     y, sr = librosa.load(audio_file_path)
 
@@ -26,11 +25,11 @@ def generate_spectrogram(audio_file_path):
 
     return np.abs(librosa.stft(y))
 
-# Funktion zum Finden von Peaks im Spektrogramm
+
 def find_peaks(spectrogram):
     return librosa.util.peak_pick(spectrogram, pre_max=2, post_max=2, pre_avg=5, post_avg=5, delta=0.1, num_peaks=3)
 
-# Funktion zum Generieren von Hashes für Peaks
+
 def generate_hashes(peaks):
     hashes = []
     for peak in peaks:
@@ -72,9 +71,6 @@ def create_constellation(audio, Fs):
             constellation_map.append([time_idx, frequency])
 
     plt.scatter(*zip(*constellation_map))
-
-        
-
     return constellation_map
 
 def create_hashes(constellation_map, song_id=None):
@@ -86,7 +82,7 @@ def create_hashes(constellation_map, song_id=None):
    
     for idx, (time, freq) in enumerate(constellation_map):
         
-        for other_time, other_freq in constellation_map[idx : idx + 100]: 
+        for other_time, other_freq in constellation_map[idx : idx + 25]: 
             diff = other_time - time
             
             if diff <= 1 or diff > 10:
@@ -102,36 +98,138 @@ def create_hashes(constellation_map, song_id=None):
 
 
 
+def find_best_match(hashes, db_connector):
+    
+    scores = score_hashes_against_database(hashes, db_connector)
+    
+    if not scores:
+        print("Keine Übereinstimmungen gefunden.")
+        return
+    
+    best_match = scores[0]  
+    
+    song_id = best_match[0]
+    best_song = songs.load_by_title(song_id)
+
+    if best_song:
+        print(f"Beste Übereinstimmung: {best_song.title}, Score: {best_match[1][1]}")
+        print(f"Artist: {best_song.artist}, File Path: {best_song.file_path}")
+    else:
+        print("Das beste übereinstimmende Lied konnte nicht gefunden werden.")
+
+
+def score_hashes_against_database(hashes, db_connector):
+    matches_per_song = {}
+    conn = sqlite3.connect('my_database.db')
+
+    # Cursor-Objekt erstellen
+    c = conn.cursor()
+    print("Scoring hashes...")
+
+
+
+    for hash, (sample_time, _) in hashes.items():
+        c.execute("SELECT time, song_id FROM hashes WHERE hash = ?", (hash,))
+        matching_occurences = c.fetchall()
+
+        for source_time, song_index in matching_occurences:
+            if song_index not in matches_per_song:
+                matches_per_song[song_index] = []
+            matches_per_song[song_index].append((hash, sample_time, source_time))
+
+        scores = {}
+        for song_index, matches in matches_per_song.items():
+            song_scores_by_offset = {}
+            for hash, sample_time, source_time in matches:
+                delta = source_time - sample_time
+                if delta not in song_scores_by_offset:
+                    song_scores_by_offset[delta] = 0
+                song_scores_by_offset[delta] += 1
+            max = (0, 0)
+            for offset, score in song_scores_by_offset.items():
+                if score > max[1]:
+                    max = (offset, score)
+
+            scores[song_index] = max
+        # Sort the scores for the user
+        scores = list(sorted(scores.items(), key=lambda x: x[1][1], reverse=True)) 
+
+    return scores
+
+def recognize_song(audio_file, db_connector):
+    # Lade die Audiodatei und generiere das Spektrogramm
+    audio, sr = librosa.load(audio_file)
+    print(f"Loaded audio of length {len(audio)}")
+    constellation_map = create_constellation(audio, sr)
+    print(f"Created constellation map with {len(constellation_map)} points")
+    hashes = create_hashes(constellation_map, None)
+    print(f"Created {len(hashes)} hashes")
+    
+    
+    print("Finding matches...")
+    
+    # Gibt die Top-Übereinstimmungen aus
+    find_best_match(hashes, db_connector)
 
 # Hauptfunktion zum Verarbeiten der Songs
-def process_songs():
-    # Verbindung zur Datenbank herstellen
-    db_connector = DatabaseConnector()
-    songs_table = db_connector.get_songs_table()
+def process_song(artist, title, audio_file_path, hashes, db_connector):
+    # Laden des Songs aus der Datenbank anhand des Titels
+    song = songs.load_by_title(title)
+    
+    # Überprüfen, ob der Song gefunden wurde
+    if song:
+        # Generiere das Spektrogramm für den Song
+        spectrogram = generate_spectrogram(audio_file_path)
 
-    # Alle Songs aus der Datenbank abrufen
-    songs = songs_table.all()
-
-    # Für jeden Song die Verarbeitung durchführen
-    for song_data in songs:
+        # Lade den Audioinhalt des Songs
+        audio, sr = librosa.load(audio_file_path)
         
-        song = Song.load_by_title(song_data['title'])
-        
-        
-        spectrogram = generate_spectrogram(song.file_path)
-
-        audio, sr = librosa.load(song.file_path)
+        # Erstelle die Sternenkarte für den Song
         constellation_map = create_constellation(audio, sr)
         
+        # Erzeuge Hashes für den Song
         hashes = create_hashes(constellation_map, song.id)
-        print(hashes)
-
         
-        song.hashes = hashes
-        song.store()
+        # Speichere die Hashes in der Datenbank
+        songs.store_hashes(hashes, song.id)
+    else:
+        print("Song not found in the database.")
+
+def process_uploaded_song(artist, title, audio_file):
+    # Verbindung zur Datenbank herstellen
+    db_connector = DatabaseConnector()
+    
+    # Speichere den hochgeladenen Song in einem temporären Verzeichnis
+    audio_file_path = f"Samples/{title}.mp3"
+    with open(audio_file_path, "wb") as f:
+        f.write(audio_file.read())
+    
+    # Generiere das Spektrogramm und verarbeite den Song
+    spectrogram = generate_spectrogram(audio_file_path)
+    audio, sr = librosa.load(audio_file_path)
+    constellation_map = create_constellation(audio, sr)
+    hashes = create_hashes(constellation_map)
+    process_song(artist, title, audio_file_path, hashes, db_connector)
 
 # Hauptprogramm
 if __name__ == "__main__":
-    process_songs()
+    print("Running main program...")
+    #process_songs()
+
+    #print_top_five('Samples/Never Be Like You.mp3')
+    #db_connector = DatabaseConnector()
+
+    # Verbindung zur Datenbank herstellen
+    
+    db_connector = DatabaseConnector()
+    songs_table = db_connector.get_songs_table()
+
+    
+
+    # Passe den Dateipfad entsprechend deiner Umgebung an
+    audio_file_path = 'AudioTests/Audio_Test5.mp3'
+
+    # Funktion aufrufen und die Audiodatei erkennen lassen
+    recognize_song(audio_file_path, db_connector)
     
     
