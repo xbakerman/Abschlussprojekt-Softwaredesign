@@ -1,14 +1,9 @@
-from tinydb.storages import JSONStorage
-from datetime import datetime, date, time
-from tinydb_serialization import Serializer, SerializationMiddleware
-from tinydb_serialization.serializers import DateTimeSerializer
 import os
-from tinydb import TinyDB, Query
-from tinydb.table import Table
+import sqlite3
 
 class DatabaseConnector:
     """
-    Usage: DatabaseConnector().get_devices_table()
+    Usage: DatabaseConnector().get_songs_table()
     The information about the actual database file path and the serializer objects has been abstracted away into this class
     """
     # Turns the class into a naive singleton
@@ -18,12 +13,12 @@ class DatabaseConnector:
     def __new__(cls):
         if cls.__instance is None:
             cls.__instance = object.__new__(cls)
-            cls.__instance.path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'music_database.json')
+            cls.__instance.path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'my_database.db')
         return cls.__instance
 
-    def get_songs_table(self) -> Table:
-        return TinyDB(self.path, storage=serializer).table('songs')
+    def get_songs_table(self):
+        conn = sqlite3.connect(self.path)
+        return conn.cursor()
 
 
-serializer = SerializationMiddleware(JSONStorage)
 

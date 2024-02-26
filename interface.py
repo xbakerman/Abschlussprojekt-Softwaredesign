@@ -3,11 +3,12 @@ from tinydb import TinyDB, Query
 from PIL import Image
 import time
 from io import BytesIO
-from songs import Song
+from songs import songs
 from database_start import DatabaseConnector
 import os
 import librosa
 from IPython.display import Video
+from song_learning import process_uploaded_song
 
 
 # Logo einbinden
@@ -32,7 +33,7 @@ def add_song_to_database(artist, title, audio_file):
     songs_table = db_connector.get_songs_table()
 
     # Song in die Datenbank einfügen
-    new_song = Song(artist=artist, title=title, file_path=None, hashes=None)  # Dateipfad vorübergehend als None setzen
+    new_song = songs(id=title, artist=artist, title=title, file_path=None)  # Dateipfad vorübergehend als None setzen
     new_song.store()
 
     # Dateiinhalt des Audio-Uploaders lesen
@@ -86,6 +87,11 @@ class MusicApp:
                     st.success("Song added successfully!")
             else:
                 st.error("Please upload an audio file.")
+
+                 # Verarbeitung der Songs auslösen
+        if st.button("Process Song"):
+                    process_uploaded_song(artist, title, audio_file)
+                    st.success("Song processed successfully!")        
 
     def recognize_workflow(self):
         st.session_state["state"] = "Identify Music"

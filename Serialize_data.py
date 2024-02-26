@@ -2,6 +2,9 @@ from abc import ABC, abstractmethod
 from database_start import DatabaseConnector
 from tinydb import Query
 
+import sqlite3
+from abc import ABC, abstractmethod
+
 class Serializable(ABC):
 
     @abstractmethod
@@ -10,38 +13,48 @@ class Serializable(ABC):
     
     @classmethod
     def find_all(cls):
-        return cls.get_db_connector().all()
+        return cls.get_db_connector().execute(f"SELECT * FROM {cls.__name__}").fetchall()
 
     @classmethod
     @abstractmethod
     def get_db_connector(cls):
-        return None
-    
+        return sqlite3.connect('my_database.db')
+
     @classmethod
     @abstractmethod
     def load_by_id(cls, id):
-        query = Query()
-        result = cls.get_db_connector().search(query.id == id)
+        result = cls.get_db_connector().execute(f"SELECT * FROM {cls.__name__} WHERE id=?", (id,)).fetchone()
         if result:
-            return result[0]
+            return result
         else:
             return None
 
     def store(self) -> None:
-        print("  Storing data...")
-        query = Query()
-        result = self.get_db_connector().search(query.id == self.id)
+      print("  Storing data...")
+      conn = self.get_db_connector()
+      c = conn.cursor()
+      result = c.execute(f"SELECT * FROM {self.__class__.__name__} WHERE id=?", (self.id,)).fetchone()
+      
 
-        if result:
-            result = self.get_db_connector().update(self.to_dict(), doc_ids=[result[0].doc_id])
-            print("  Data updated.")
-        else:
-            self.get_db_connector().insert(self.to_dict())
-            print("  Data inserted.")
+      if result:
+          # Aktualisieren Sie die Felder 'title', 'artist' und 'file_path' für den Song mit dieser ID
+          c.execute(f"UPDATE {self.__class__.__name__} SET title=?, artist=?, file_path=? WHERE id=?", (self.title, self.artist, self.file_path, self.id))
+          print("  Data updated.")
+      else:
+          # Fügen Sie einen neuen Song mit diesen Feldern ein
+          c.execute(f"INSERT INTO {self.__class__.__name__} (id, title, artist, file_path) VALUES (?, ?, ?, ?)", (self.id, self.title, self.artist, self.file_path))
+          print("  Data inserted.")
+      conn.commit()
+      conn.close()
 
     def delete(self) -> None:
-        query = Query()
-        result = self.get_db_connector().remove(query.id == self.id)
+        conn = self.get_db_connector()
+        c = conn.cursor()
+        c.execute(f"DELETE FROM {self.__class__.__name__} WHERE id=?", (self.id,))
+        conn.commit()
+        conn.close()
+
+    
 
     def to_dict(self, *args):
         """

@@ -1,1 +1,0 @@
-{"songs": {"1": {"id": "Song One", "title": "Song One", "artist": "Artist One", "file_path": "/path/to/song1.mp3"}, "2": {"id": "Song Two", "title": "Song Two", "artist": "Artist Two", "file_path": "/path/to/song2.mp3"}, "3": {"id": "Song Three", "title": "Song Three", "artist": "Artist Three", "file_path": "/path/to/song3.mp3"}}}

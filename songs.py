@@ -1,42 +1,55 @@
+import sqlite3
 from Serialize_data import Serializable
-from database_start import DatabaseConnector
-from tinydb import Query
 
-class Song(Serializable):
+class songs(Serializable):
     
-    def __init__(self, title, artist, file_path, hashes) -> None:
-        super().__init__(title)  # Verwende den Titel als ID
+    def __init__(self, id, title, artist, file_path) -> None:
+        super().__init__(id)  # Verwende den Titel als ID
         self.title = title
         self.artist = artist
         self.file_path = file_path
-        self.hashes = hashes
+        #self.hashes = hashes
 
     @classmethod
     def get_db_connector(cls):
-        return DatabaseConnector().get_songs_table()
+        return sqlite3.connect('my_database.db')
 
     def store(self):
         print("Storing song...")
         super().store()
+        
 
     @classmethod
     def load_by_id(cls, id):
         print("Loading song...")
         data = super().load_by_id(id)
         if data:
-            return cls(data['title'], data['artist'], data['file_path'], data['hashes'])  # Lade die Daten und erstelle ein Song-Objekt
+            return cls(*data)  # Lade die Daten und erstelle ein Song-Objekt
         else:
             return None
         
     @classmethod
     def load_by_title(cls, title):
         print("Loading song...")
-        query = Query()
-        result = cls.get_db_connector().search(query.title == title)
+        conn = cls.get_db_connector()
+        c = conn.cursor()
+        result = c.execute("SELECT id, title, artist, file_path FROM songs WHERE title=?", (title,)).fetchone()
         if result:
-            return cls(result[0]['title'], result[0]['artist'], result[0]['file_path'], result[0]['hashes'])
+            return cls(*result)
         else:
             return None
+        
+    def store_hashes(hashes, song_id):
+        conn = sqlite3.connect('my_database.db')
+        c = conn.cursor()
+
+        print(type(hashes))
+
+        for hash, (time, _) in hashes.items():
+            c.execute("INSERT INTO hashes (song_id, hash, time) VALUES (?, ?, ?)", (song_id, hash, time))
+
+        conn.commit()
+        conn.close()
         
     def delete(self):
         super().delete()
@@ -50,19 +63,20 @@ class Song(Serializable):
 
 if __name__ == "__main__":
     # Beispiel für die Verwendung der Klasse Song
-    #song1 = Song("Song One", "Artist One", "/path/to/song1.mp3")
-    #song2 = Song("Song Two", "Artist Two", "/path/to/song2.mp3") 
-    #song3 = Song("Song Three", "Artist Three", "/path/to/song3.mp3") 
-    #song1.store()
-    #song2.store()
-    #song3.store()
-
-    loaded_song = Song.load_by_title("Adieu")
-    if loaded_song:
-        print(f"Loaded: {loaded_song}")
-    else:
-        print("Song not found.")
-
-    all_songs = Song.find_all()
-    for song in all_songs:
-        print(song)
+    #
+    song1 = songs('3', 'Adieu', 'Tchami', 'Samples/9613057_Adieu_(Original Mix).mp3')
+    #song2 = songs('4', 'I Love Rock n Roll', 'Joan Jett', "Samples/I love Rock'n'Roll.mp3") 
+    #song3 = songs('5', 'Never Be Like You', 'JFlume', "Samples/Never Be Like You.mp3") 
+    #song1.delete()
+    #song2.delete()
+    #song3.delete()
+#
+    ##song1.delete()
+#
+    #loaded_song = songs.load_by_title("103")
+#
+    ## Überprüfen Sie, ob der Song korrekt geladen wurde
+    #if loaded_song:
+    #    print(f"Loaded: {loaded_song}")
+    #else:
+    #    print("Song not found.")
