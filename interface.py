@@ -113,38 +113,39 @@ def recognize_workflow():
         file_to_recognize = st.file_uploader("Upload file", type=["mp3", "wav"])
 
         if st.button("Identify"):
-            if file_to_recognize and isinstance(file_to_recognize, BytesIO):
-                st.write("File uploaded successfully.")
+            with st.spinner("Processing..."):
+                if file_to_recognize and isinstance(file_to_recognize, BytesIO):
+                    #st.write("File uploaded successfully.")
 
-                file_to_recognize.seek(0)  # Setze den Dateizeiger auf den Anfang der Datei
+                    file_to_recognize.seek(0)  # Setze den Dateizeiger auf den Anfang der Datei
 
-                with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
-                    # Schreibe den Inhalt der hochgeladenen Datei in die temporäre Datei
-                    tmp.write(file_to_recognize.read())
-                    tmp_file_name = tmp.name
-                st.write(f"Temporary file created: {tmp_file_name}")
-                # Öffne die temporäre Datei und zeige ihren Inhalt an
-                with open(tmp_file_name, "rb") as f:
-                    content = f.read()
-                    st.audio(content, format='audio/mp3')
+                    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
+                        # Schreibe den Inhalt der hochgeladenen Datei in die temporäre Datei
+                        tmp.write(file_to_recognize.read())
+                        tmp_file_name = tmp.name
+                    #st.write(f"Temporary file created: {tmp_file_name}")
+                    # Öffne die temporäre Datei und zeige ihren Inhalt an
+                    with open(tmp_file_name, "rb") as f:
+                        content = f.read()
+                        st.audio(content, format='audio/mp3')
 
-                try:
-                    db_connector = sqlite3.connect('my_database.db') # Stelle die Verbindung zur Datenbank her
-                except Exception as e:
-                    st.error(f"Failed to connect to the database: {e}")
-                    return
+                    try:
+                        db_connector = sqlite3.connect('my_database.db') # Stelle die Verbindung zur Datenbank her
+                    except Exception as e:
+                        st.error(f"Failed to connect to the database: {e}")
+                        return
 
-                # Führe die Erkennungsfunktion durch und zeige das Ergebnis an
-                result = recognize_song_id(tmp_file_name, db_connector)
-                print(result)
+                    # Führe die Erkennungsfunktion durch und zeige das Ergebnis an
+                    result = recognize_song_id(tmp_file_name, db_connector)
+                    print(result)
 
-                # Zeige das Ergebnis an, wenn es vorhanden ist
-                if result:
-                    st.success(f"Music identified as '{result.title}' from '{result.artist}'.")
+                    # Zeige das Ergebnis an, wenn es vorhanden ist
+                    if result:
+                        st.success(f"Music identified as '{result.title}' from '{result.artist}'.")
 
-                    #st.audio(result.file_path, format='audio/mp3')
-                else:
-                    st.error("No match found.")
+                        #st.audio(result.file_path, format='audio/mp3')
+                    else:
+                        st.error("No match found.")
 
 
     elif selected2 == "Via Microphone":
