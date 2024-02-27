@@ -1,6 +1,8 @@
 # Importiere die relevanten Klassen und Funktionen
 
-from songs import Song 
+from songs import songs
+from database_start import DatabaseConnector
+from Recognise import recognize_song
 
 import os
 
@@ -12,21 +14,16 @@ song_hashes = []  # Du kannst die Hashes später generieren, nachdem du das Spek
 
 folder_path = 'Samples'
 
-# Erzeuge eine Instanz des Songs
-new_song = Song(song_title, song_artist, song_file_path, song_hashes)
-
-new_song.store()
 
 
 
-loaded_song = Song.load_by_title(song_title)
 
-# Überprüfen, ob der Song erfolgreich geladen wurde
-if loaded_song:
-    print("Song geladen:", loaded_song)
-    # Jetzt kannst du mit dem geladenen Song weiterarbeiten, z.B. Spektrogramm generieren, Hashes berechnen, usw.
-else:
-    print("Song nicht gefunden.")
+db_connector = DatabaseConnector()
 
+
+# Passe den Dateipfad entsprechend deiner Umgebung an
+audio_file_path = 'AudioTests/Audio_Test7.mp3'
+# Funktion aufrufen und die Audiodatei erkennen lassen
+recognize_song(audio_file_path, db_connector)
 
 
