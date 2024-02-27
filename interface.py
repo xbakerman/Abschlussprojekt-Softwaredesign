@@ -8,12 +8,20 @@ from database_start import DatabaseConnector
 import os
 import librosa
 from IPython.display import Video
-from song_learning import process_uploaded_song
+from Register import process_uploaded_song
+from streamlit_option_menu import option_menu
+from Recognise import recognize_song 
+import tempfile
+import sqlite3
+import soundfile as sf
+import io
+from scipy.io import wavfile
 
 
 # Logo einbinden
 logo_path = "Logo.jpg"  # Passe den Pfad zu deinem Logo an
 logo_image = Image.open(logo_path)
+result = None
 
 # Willkommensnachricht
 welcome_message = "Welcome to SoundWizard, your music recognition tool"
@@ -48,88 +56,123 @@ def add_song_to_database(artist, title, audio_file):
     new_song.file_path = file_path
     new_song.store()
 
+def recognize_song_id(file_path, db_connector):
+    # Erkenne den Song und gib das Ergebnis zurück
+    return recognize_song(file_path, db_connector)
 
-class MusicApp:
-    def __init__(self):
-        self.initialize_ui()
+def __init__(self):
+    self.initialize_ui()
 
-    def initialize_ui(self):
-        st.header("Music Recognition")
-
-        # Überprüfen, ob "state" in st.session_state existiert, wenn nicht, initialisieren
-        if "state" not in st.session_state:
-            st.session_state["state"] = "Learn Music"
-
-        # Wechseln zwischen "Musikstücke einlernen" und "Musikstücke identifizieren"
-        option = st.radio("Choose an option:", ["Learn Music", "Identify Music"])
-        if option == "Learn Music":
-            self.learn_workflow()
-        elif option == "Identify Music":
-            self.recognize_workflow()
-
-        # Hier kannst du weitere UI-Elemente hinzufügen
-
-    def learn_workflow(self):
+def initialize_ui(self):
+    st.header("Music Recognition")
+    # Überprüfen, ob "state" in st.session_state existiert, wenn nicht, initialisieren
+    if "state" not in st.session_state:
         st.session_state["state"] = "Learn Music"
-        st.header("Learn Music")
-        # Hier kannst du die UI-Elemente für das Einlernen von Musikstücken hinzufügen
-        artist = st.text_input("Artist:")
-        title = st.text_input("Title:")
-        audio_file = st.file_uploader("Upload file", type=["mp3", "wav"])
+    # Wechseln zwischen "Musikstücke einlernen" und "Musikstücke identifizieren"
+    option = st.radio("Choose an option:", ["Learn Music", "Identify Music"])
+    if option == "Learn Music":
+        self.learn_workflow()
+    elif option == "Identify Music":
+        self.recognize_workflow()
+    # Hier kannst du weitere UI-Elemente hinzufügen
+def learn_workflow():
+    st.session_state["state"] = "Learn Music"
+    st.header("Learn Music")
+    # Hier kannst du die UI-Elemente für das Einlernen von Musikstücken hinzufügen
+    artist = st.text_input("Artist:")
+    title = st.text_input("Title:")
+    audio_file = st.file_uploader("Upload file", type=["mp3", "wav"])
+    if artist and title and audio_file:
+    # Überprüfen, ob eine Datei hochgeladen wurde
+        if isinstance(audio_file, BytesIO):
+            # Button zum Hinzufügen des Songs
+            if st.button("Add"):
+                # Song zur Datenbank hinzufügen
+                add_song_to_database(artist, title, audio_file)
+                st.success("Song added successfully!")
+        else:
+            st.error("Please upload an audio file.")
+             # Verarbeitung der Songs auslösen
+    if st.button("Process Song"):
+                process_uploaded_song(artist, title, audio_file)
+                st.success("Song processed successfully!")   
 
-        if artist and title and audio_file:
-        # Überprüfen, ob eine Datei hochgeladen wurde
-            if isinstance(audio_file, BytesIO):
-                # Button zum Hinzufügen des Songs
-                if st.button("Add"):
-                    # Song zur Datenbank hinzufügen
-                    add_song_to_database(artist, title, audio_file)
-                    st.success("Song added successfully!")
-            else:
-                st.error("Please upload an audio file.")
 
-                 # Verarbeitung der Songs auslösen
-        if st.button("Process Song"):
-                    process_uploaded_song(artist, title, audio_file)
-                    st.success("Song processed successfully!")        
 
-    def recognize_workflow(self):
-        st.session_state["state"] = "Identify Music"
-        st.header("Identify Music")
-        # Hier kannst du die UI-Elemente für die Identifikation von Musikstücken hinzufügen
+def recognize_workflow():
+    global result
+    st.header("Identify Music")
+
+    with st.container():
+        selected2 = option_menu(None, ["Via Upload", "Via Microphone"], 
+        icons=['house', 'cloud-upload', "list-task", 'gear'], 
+        menu_icon="cast", default_index=0, orientation="horizontal")
+
+    if selected2 == "Via Upload":
+    # Hier kannst du die UI-Elemente für die Identifikation von Musikstücken hinzufügen
         file_to_recognize = st.file_uploader("Upload file", type=["mp3", "wav"])
 
         if st.button("Identify"):
-            if file_to_recognize:
-                # Führe die Identifikation durch und zeige das Ergebnis an (Annahme: Die Funktion ist in der Musikerkennung implementiert)
-                # result = MusicRecognizer.recognize_music(file_to_recognize)
-                # st.success(f"Music identified as '{result}'.")
-                st.success("Music has been identified. (Function not yet implemented)")
+            if file_to_recognize and isinstance(file_to_recognize, BytesIO):
+                st.write("File uploaded successfully.")
 
-                # Füge den "Listen"-Button nur im "Identify Music"-Modus hinzu
-                if st.button("Listen"):
-                    self.listen_workflow()
+                file_to_recognize.seek(0)  # Setze den Dateizeiger auf den Anfang der Datei
 
-    def listen_workflow(self):
-        st.header("Listen to Music")
+                with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
+                    # Schreibe den Inhalt der hochgeladenen Datei in die temporäre Datei
+                    tmp.write(file_to_recognize.read())
+                    tmp_file_name = tmp.name
+                st.write(f"Temporary file created: {tmp_file_name}")
+                # Öffne die temporäre Datei und zeige ihren Inhalt an
+                with open(tmp_file_name, "rb") as f:
+                    content = f.read()
+                    st.audio(content, format='audio/mp3')
 
-        # Video während des Hörvorgangs
-        video_path = "listening.mp4"  # Passe den Pfad zu deinem Video an
+                try:
+                    db_connector = sqlite3.connect('my_database.db') # Stelle die Verbindung zur Datenbank her
+                except Exception as e:
+                    st.error(f"Failed to connect to the database: {e}")
+                    return
 
-        # IPython Video-Element mit Breite und Autoplay
-        video = Video(video_path, embed=True, width=400)
+                # Führe die Erkennungsfunktion durch und zeige das Ergebnis an
+                result = recognize_song_id(tmp_file_name, db_connector)
+                print(result)
 
-        # Anzeige des Videos
-        st.markdown(f"### Video Preview\n{video._repr_html_()}", unsafe_allow_html=True)
+                # Zeige das Ergebnis an, wenn es vorhanden ist
+                if result:
+                    st.success(f"Music identified as '{result.title}' from '{result.artist}'.")
 
-        # Hier kannst du die UI-Elemente für das Lauschen von Musikstücken hinzufügen
-        st.info("Listening... Please play the music to be recognized.")
+                    #st.audio(result.file_path, format='audio/mp3')
+                else:
+                    st.error("No match found.")
 
-        # Simuliere das Zuhören für einige Zeit (in diesem Beispiel 30 Sekunden)
-        time.sleep(30)
 
-        # Nach dem Hören den erkannten Song anzeigen (Annahme: Die Funktion ist in der Musikerkennung implementiert)
-        st.success("Music has been identified. (Function not yet implemented)")
+    elif selected2 == "Via Microphone":
+        if st.button("Start Recording"):
+            db_connector = sqlite3.connect('my_database.db')  # Stelle die Verbindung zur Datenbank her
+
+
+
+            with st.spinner("Processing..."):
+                result, audio = recognize_song_via_mic()
+                st.audio(audio, format='audio/wav')                            # Übergebe den Dateipfad der temporären Datei an deine Funktion
+
+            if result:
+                st.success(f"Music identified as '{result.title}'.")
+                st.write(f"Artist: {result.artist}")
+                st.audio(result.file_path, format='audio/mp3')
+            else:
+                st.error("No match found.")
+
+with st.container():
+    selected2 = option_menu(None, ["Register", "Recognise"], 
+    icons=['bi bi-plus-circle', 'bi bi-database', "list-task", 'gear'], 
+    menu_icon="cast", default_index=0, orientation="horizontal")
 
 if __name__ == "__main__":
-    app = MusicApp()
+    if selected2 == "Register":
+        learn_workflow()
+
+    elif selected2 == "Recognise":
+        recognize_workflow()
+   

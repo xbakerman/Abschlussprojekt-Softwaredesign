@@ -227,7 +227,7 @@ if __name__ == "__main__":
     
 
     # Passe den Dateipfad entsprechend deiner Umgebung an
-    audio_file_path = 'AudioTests/Audio_Test5.mp3'
+    audio_file_path = 'AudioTests/Audio_Test6.mp3'
 
     # Funktion aufrufen und die Audiodatei erkennen lassen
     recognize_song(audio_file_path, db_connector)
