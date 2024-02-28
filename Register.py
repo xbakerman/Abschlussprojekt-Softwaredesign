@@ -13,8 +13,9 @@ import sqlite3
 import sounddevice as sd
 import noisereduce as nr
 import pyaudio
+from pydub import AudioSegment
 import wave
-import tempfile
+import soundfile as sf
 
 def create_constellation(audio, Fs):
     
@@ -47,7 +48,10 @@ def create_constellation(audio, Fs):
             constellation_map.append([t_idx, frequency])                       #Hinzufügen der Peaks zum Constellation Map
 
     plt.scatter(*zip(*constellation_map))
+    
     return constellation_map
+
+
 
 def create_hashes(constellation_map, song_id=None):
     hashes = {}
@@ -57,10 +61,14 @@ def create_hashes(constellation_map, song_id=None):
 
     for idx, (time, freq) in enumerate(constellation_map):
         
-        for other_t, other_freq in constellation_map[idx : idx + 100]: 
+        for other_t, other_freq in constellation_map[idx : idx + 50]: 
             dif = other_t - time
             
             if dif <= 1 or dif > 10:
+                if freq > high_frequency * 0.8:  
+                    hash = int(freq_binned) | (int(other_freq_binned) << 10) | (int(dif) << 20)
+                    hashes[hash] = (time, song_id)
+  
                 continue
 
             
@@ -108,6 +116,55 @@ def process_uploaded_song(artist, title, audio_file):
     audio, sr = librosa.load(audio_file_path)
     constellation_map = create_constellation(audio, sr)
     hashes = create_hashes(constellation_map)
+    print(f"Created {len(hashes)} hashes")
     process_song(artist, title, audio_file_path, hashes, db_connector)
+
+
+def record_audio_simple(duration, fs):
+    duration = 10  
+    fs = 22050  
+
+    
+    print("Recording...")
+    audio = sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype=np.float32)
+    sd.wait()  
+    
+    return audio
+
+
+def record_audio(filename=None):
+    p = pyaudio.PyAudio()
+
+    stream = p.open(format=pyaudio.paInt16,
+                    channels=1,
+                    rate=44100,
+                    input=True,
+                    frames_per_buffer=1024)
+
+    print("* recording")
+
+    frames = []
+    
+
+    for i in range(0, int(44100 / 1024 * 13)):
+        data = stream.read(1024)
+        frames.append(data)
+        
+
+    print("* done recording")
+
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
+
+    if filename is not None:
+        wf = wave.open(filename, 'wb')
+        wf.setnchannels(1)
+        wf.setsampwidth(p.get_sample_size(pyaudio.paInt16))
+        wf.setframerate(44100)
+        wf.writeframes(b''.join(frames))
+        wf.close()
+
+    return np.hstack(frames)
 
 

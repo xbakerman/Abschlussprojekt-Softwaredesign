@@ -9,13 +9,15 @@ from database_start import DatabaseConnector
 from songs import songs
 from scipy.io.wavfile import read
 import sqlite3
-from Register import create_constellation, create_hashes
+from Register import create_constellation, create_hashes, record_audio
 import logging
 import sounddevice as sd
 from pydub import AudioSegment
 import io
 import tempfile
-
+import scipy.io.wavfile as wav
+from scipy.signal import wiener
+from pydub.utils import get_array_type
 
 
 
@@ -33,12 +35,19 @@ def find_best_match(hashes, db_connector):
     best_song = songs.load_by_title(song_id)
 
     if best_song:
-        print(f"Beste Übereinstimmung: {best_song.title}, Score: {best_match[1][1]}")
-        print(f"Artist: {best_song.artist}, File Path: {best_song.file_path}")
-        return best_song
+        if best_match[1][1] >= 100:
+            print(f"Beste Übereinstimmung: {best_song.title}, Score: {best_match[1][1]}")
+            print(f"Artist: {best_song.artist}, File Path: {best_song.file_path}")
+            return best_song
+        else:
+            print("Kein Match.")
+            return None
     else:
         print("Das beste übereinstimmende Lied konnte nicht gefunden werden.")
         return None
+
+    
+
 
 
 def score_hashes_against_database(hashes, db_connector):
@@ -86,6 +95,8 @@ def recognize_song(audio_file, db_connector):
     
     # Lade die Audiodatei und generiere das Spektrogramm
     audio, sr = librosa.load(audio_file)
+    print("Sampling rate (Abtastrate):", sr)
+    
     print(f"Loaded audio of length {len(audio)}")
 
     constellation_map = create_constellation(audio, sr)
@@ -97,10 +108,36 @@ def recognize_song(audio_file, db_connector):
     
     print("Finding matches...")
     
-    # Gibt die Top-Übereinstimmungen aus
+    
     
 
     result = find_best_match(hashes, db_connector)
     return result
+
+import numpy as np
+
+def record_and_recognize():
+    duration = 10  # Dauer der Aufnahme in Sekunden
+    fs = 44100  # Abtastrate in Hz
+    db_connector = DatabaseConnector()
+    # Aufnehmen von Audio
+    audio = record_audio("recorded_audio.wav")
+
+    audio, sr = librosa.load("recorded_audio.wav")
+
+    constellation_map = create_constellation(audio, sr)
+    print(f"Created constellation map with {len(constellation_map)} points")
+
+    hashes = create_hashes(constellation_map, None)
+    print(f"Created {len(hashes)} hashes")
+
+    print("Finding matches...")
+
+    result = find_best_match(hashes, db_connector)
+
+    
+    
+    return result
+
 
 

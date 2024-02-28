@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from database_start import DatabaseConnector
 from tinydb import Query
-
+import os
 import sqlite3
 from abc import ABC, abstractmethod
 
@@ -51,6 +51,13 @@ class Serializable(ABC):
         conn = self.get_db_connector()
         c = conn.cursor()
         c.execute(f"DELETE FROM {self.__class__.__name__} WHERE id=?", (self.id,))
+        c.execute("DELETE FROM hashes WHERE song_id=?", (self.id,))
+
+            # Datei aus dem Ordner löschen
+        if self.file_path:
+            if os.path.exists(self.file_path):
+                os.remove(self.file_path)
+
         conn.commit()
         conn.close()
 

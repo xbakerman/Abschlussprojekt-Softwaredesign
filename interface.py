@@ -1,21 +1,17 @@
 import streamlit as st
-from tinydb import TinyDB, Query
 from PIL import Image
-import time
 from io import BytesIO
 from songs import songs
 from database_start import DatabaseConnector
-import os
-import librosa
-from IPython.display import Video
 from Register import process_uploaded_song
 from streamlit_option_menu import option_menu
-from Recognise import recognize_song 
+from Recognise import recognize_song, record_and_recognize
 import tempfile
 import sqlite3
-import soundfile as sf
-import io
-from scipy.io import wavfile
+
+
+
+
 
 
 # Logo einbinden
@@ -56,9 +52,7 @@ def add_song_to_database(artist, title, audio_file):
     new_song.file_path = file_path
     new_song.store()
 
-def recognize_song_id(file_path, db_connector):
-    # Erkenne den Song und gib das Ergebnis zurück
-    return recognize_song(file_path, db_connector)
+
 
 def __init__(self):
     self.initialize_ui()
@@ -78,24 +72,36 @@ def initialize_ui(self):
 def learn_workflow():
     st.session_state["state"] = "Learn Music"
     st.header("Learn Music")
+    
     # Hier kannst du die UI-Elemente für das Einlernen von Musikstücken hinzufügen
     artist = st.text_input("Artist:")
     title = st.text_input("Title:")
     audio_file = st.file_uploader("Upload file", type=["mp3", "wav"])
+
     if artist and title and audio_file:
-    # Überprüfen, ob eine Datei hochgeladen wurde
+        # Überprüfen, ob eine Datei hochgeladen wurde
         if isinstance(audio_file, BytesIO):
-            # Button zum Hinzufügen des Songs
-            if st.button("Add"):
-                # Song zur Datenbank hinzufügen
-                add_song_to_database(artist, title, audio_file)
-                st.success("Song added successfully!")
+            # Button zum Hinzufügen und Verarbeiten des Songs
+            if st.button("Add Song"):
+                with st.spinner("Uploading..."):
+                    # Song zur Datenbank hinzufügen
+                    add_song_to_database(artist, title, audio_file)
+                    # Verarbeitung des hochgeladenen Songs
+                    
+                    
+                    st.success("Song added successfully!")
         else:
             st.error("Please upload an audio file.")
-             # Verarbeitung der Songs auslösen
+
     if st.button("Process Song"):
-                process_uploaded_song(artist, title, audio_file)
-                st.success("Song processed successfully!")   
+        with st.spinner("Processing..."):
+            # Song zur Datenbank hinzufügen
+            
+            # Verarbeitung des hochgeladenen Songs
+            process_uploaded_song(artist, title, audio_file)
+            
+            st.success("Song processed successfully!")
+     
 
 
 
@@ -105,7 +111,7 @@ def recognize_workflow():
 
     with st.container():
         selected2 = option_menu(None, ["Via Upload", "Via Microphone"], 
-        icons=['house', 'cloud-upload', "list-task", 'gear'], 
+        icons=['cloud-upload', 'bi bi-mic'], 
         menu_icon="cast", default_index=0, orientation="horizontal")
 
     if selected2 == "Via Upload":
@@ -136,12 +142,12 @@ def recognize_workflow():
                         return
 
                     # Führe die Erkennungsfunktion durch und zeige das Ergebnis an
-                    result = recognize_song_id(tmp_file_name, db_connector)
+                    result = recognize_song(tmp_file_name, db_connector)
                     print(result)
 
                     # Zeige das Ergebnis an, wenn es vorhanden ist
                     if result:
-                        st.success(f"Music identified as '{result.title}' from '{result.artist}'.")
+                        st.success(f"Music identified as '{result.title}' from Artist '{result.artist}'.")
 
                         #st.audio(result.file_path, format='audio/mp3')
                     else:
@@ -149,25 +155,46 @@ def recognize_workflow():
 
 
     elif selected2 == "Via Microphone":
+        db_connector = DatabaseConnector()
         if st.button("Start Recording"):
-            db_connector = sqlite3.connect('my_database.db')  # Stelle die Verbindung zur Datenbank her
+            with st.spinner("Recording..."):
+                result = record_and_recognize()
+            
 
-
-
-            with st.spinner("Processing..."):
-                result, audio = recognize_song_via_mic()
-                st.audio(audio, format='audio/wav')                            # Übergebe den Dateipfad der temporären Datei an deine Funktion
-
+            # Zeige das Ergebnis an, wenn es vorhanden ist
             if result:
-                st.success(f"Music identified as '{result.title}'.")
-                st.write(f"Artist: {result.artist}")
-                st.audio(result.file_path, format='audio/mp3')
+                st.success(f"Music identified as '{result.title}' from Artist '{result.artist}'.")
+                
+                
             else:
                 st.error("No match found.")
 
+def Administration():
+    st.header("Database Administration")
+    with st.form(key='loeschen_form'):
+        # Hier kannst du die UI-Elemente für die Administration hinzufügen
+        alle_songs = songs.load_all_data()
+        options = [(f"{song.title} - {song.artist}", song) for song in alle_songs]  # Tuple aus Songtitel und Song-Objekt
+        selected_option = st.selectbox("Select a song:", options, format_func=lambda x: x[0])  # Anzeigen des Songtitels im Dropdown-Menü
+        submit_button = st.form_submit_button(label="Delete")
+        
+        if submit_button:
+            if not selected_option:
+                st.error("Please select a song.")
+            else:
+                #st.write("Selected option:", selected_option)
+                song_title, zu_löschen = selected_option
+                if zu_löschen:
+                    zu_löschen.delete()
+                    st.success("Song deleted successfully!")
+                else:
+                    st.error("The selected song does not exist.")
+
+
+
 with st.container():
-    selected2 = option_menu(None, ["Register", "Recognise"], 
-    icons=['bi bi-plus-circle', 'bi bi-database', "list-task", 'gear'], 
+    selected2 = option_menu(None, ["Register", "Recognise", "Administration"], 
+    icons=['bi bi-plus-circle', 'bi bi-database', "bi bi-gear"], 
     menu_icon="cast", default_index=0, orientation="horizontal")
 
 if __name__ == "__main__":
@@ -176,4 +203,6 @@ if __name__ == "__main__":
 
     elif selected2 == "Recognise":
         recognize_workflow()
-   
+
+    elif selected2 == "Administration":
+        Administration()

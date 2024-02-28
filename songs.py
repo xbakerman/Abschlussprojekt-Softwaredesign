@@ -50,6 +50,24 @@ class songs(Serializable):
 
         conn.commit()
         conn.close()
+
+    @classmethod
+    def load_all_data(cls):
+        # Verbindung zur SQLite-Datenbank herstellen
+        connection = sqlite3.connect('my_database.db')
+        cursor = connection.cursor()
+
+        # Abfrage ausführen, um alle Songdaten abzurufen
+        cursor.execute("SELECT id, title, artist, file_path FROM songs")
+        all_data = cursor.fetchall()
+
+        # Liste von Song-Objekten erstellen
+        songs = [cls(data[0], data[1], data[2], data[3]) for data in all_data]
+
+        # Verbindung schließen
+        connection.close()
+
+        return songs
         
     def delete(self):
         super().delete()
@@ -64,14 +82,14 @@ class songs(Serializable):
 if __name__ == "__main__":
     # Beispiel für die Verwendung der Klasse Song
     #
-    song1 = songs('3', 'Adieu', 'Tchami', 'Samples/9613057_Adieu_(Original Mix).mp3')
+    song1 = songs('D.E.E.E.P.', 'D.E.E.E.P.', 'Superlover', 'Samples/15683450_D.E.E.E.P_(Original Mix).mp3')
     #song2 = songs('4', 'I Love Rock n Roll', 'Joan Jett', "Samples/I love Rock'n'Roll.mp3") 
     #song3 = songs('5', 'Never Be Like You', 'JFlume', "Samples/Never Be Like You.mp3") 
     #song1.delete()
     #song2.delete()
     #song3.delete()
 #
-    ##song1.delete()
+    song1.delete()
 #
     #loaded_song = songs.load_by_title("103")
 #
