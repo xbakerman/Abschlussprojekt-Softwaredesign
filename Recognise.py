@@ -9,15 +9,23 @@ from database_start import DatabaseConnector
 from songs import songs
 from scipy.io.wavfile import read
 import sqlite3
+<<<<<<< HEAD
 from Register import create_constellation, create_hashes, record_audio
+=======
+from Register import create_constellation, create_hashes
+>>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
 import logging
 import sounddevice as sd
 from pydub import AudioSegment
 import io
 import tempfile
+<<<<<<< HEAD
 import scipy.io.wavfile as wav
 from scipy.signal import wiener
 from pydub.utils import get_array_type
+=======
+
+>>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
 
 
 
@@ -35,6 +43,7 @@ def find_best_match(hashes, db_connector):
     best_song = songs.load_by_title(song_id)
 
     if best_song:
+<<<<<<< HEAD
         if best_match[1][1] >= 100:
             print(f"Beste Übereinstimmung: {best_song.title}, Score: {best_match[1][1]}")
             print(f"Artist: {best_song.artist}, File Path: {best_song.file_path}")
@@ -42,13 +51,21 @@ def find_best_match(hashes, db_connector):
         else:
             print("Kein Match.")
             return None
+=======
+        print(f"Beste Übereinstimmung: {best_song.title}, Score: {best_match[1][1]}")
+        print(f"Artist: {best_song.artist}, File Path: {best_song.file_path}")
+        return best_song
+>>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
     else:
         print("Das beste übereinstimmende Lied konnte nicht gefunden werden.")
         return None
 
+<<<<<<< HEAD
     
 
 
+=======
+>>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
 
 def score_hashes_against_database(hashes, db_connector):
     matches_per_song = {}
@@ -95,8 +112,11 @@ def recognize_song(audio_file, db_connector):
     
     # Lade die Audiodatei und generiere das Spektrogramm
     audio, sr = librosa.load(audio_file)
+<<<<<<< HEAD
     print("Sampling rate (Abtastrate):", sr)
     
+=======
+>>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
     print(f"Loaded audio of length {len(audio)}")
 
     constellation_map = create_constellation(audio, sr)
@@ -108,12 +128,17 @@ def recognize_song(audio_file, db_connector):
     
     print("Finding matches...")
     
+<<<<<<< HEAD
     
+=======
+    # Gibt die Top-Übereinstimmungen aus
+>>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
     
 
     result = find_best_match(hashes, db_connector)
     return result
 
+<<<<<<< HEAD
 import numpy as np
 
 def record_and_recognize():
@@ -140,4 +165,6 @@ def record_and_recognize():
     return result
 
 
+=======
+>>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
 

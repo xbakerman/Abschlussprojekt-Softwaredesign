@@ -50,6 +50,7 @@ class songs(Serializable):
 
         conn.commit()
         conn.close()
+<<<<<<< HEAD
 
     @classmethod
     def load_all_data(cls):
@@ -68,6 +69,8 @@ class songs(Serializable):
         connection.close()
 
         return songs
+=======
+>>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
         
     def delete(self):
         super().delete()
@@ -82,14 +85,22 @@ class songs(Serializable):
 if __name__ == "__main__":
     # Beispiel für die Verwendung der Klasse Song
     #
+<<<<<<< HEAD
     song1 = songs('D.E.E.E.P.', 'D.E.E.E.P.', 'Superlover', 'Samples/15683450_D.E.E.E.P_(Original Mix).mp3')
+=======
+    song1 = songs('3', 'Adieu', 'Tchami', 'Samples/9613057_Adieu_(Original Mix).mp3')
+>>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
     #song2 = songs('4', 'I Love Rock n Roll', 'Joan Jett', "Samples/I love Rock'n'Roll.mp3") 
     #song3 = songs('5', 'Never Be Like You', 'JFlume', "Samples/Never Be Like You.mp3") 
     #song1.delete()
     #song2.delete()
     #song3.delete()
 #
+<<<<<<< HEAD
     song1.delete()
+=======
+    ##song1.delete()
+>>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
 #
     #loaded_song = songs.load_by_title("103")
 #
