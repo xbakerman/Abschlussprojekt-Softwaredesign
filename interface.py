@@ -1,5 +1,4 @@
 import streamlit as st
-<<<<<<< HEAD
 from PIL import Image
 from io import BytesIO
 from songs import songs
@@ -13,25 +12,6 @@ import sqlite3
 
 
 
-=======
-from tinydb import TinyDB, Query
-from PIL import Image
-import time
-from io import BytesIO
-from songs import songs
-from database_start import DatabaseConnector
-import os
-import librosa
-from IPython.display import Video
-from Register import process_uploaded_song
-from streamlit_option_menu import option_menu
-from Recognise import recognize_song 
-import tempfile
-import sqlite3
-import soundfile as sf
-import io
-from scipy.io import wavfile
->>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
 
 
 # Logo einbinden
@@ -72,13 +52,6 @@ def add_song_to_database(artist, title, audio_file):
     new_song.file_path = file_path
     new_song.store()
 
-<<<<<<< HEAD
-
-=======
-def recognize_song_id(file_path, db_connector):
-    # Erkenne den Song und gib das Ergebnis zurück
-    return recognize_song(file_path, db_connector)
->>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
 
 def __init__(self):
     self.initialize_ui()
@@ -98,15 +71,11 @@ def initialize_ui(self):
 def learn_workflow():
     st.session_state["state"] = "Learn Music"
     st.header("Learn Music")
-<<<<<<< HEAD
     
-=======
->>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
     # Hier kannst du die UI-Elemente für das Einlernen von Musikstücken hinzufügen
     artist = st.text_input("Artist:")
     title = st.text_input("Title:")
     audio_file = st.file_uploader("Upload file", type=["mp3", "wav"])
-<<<<<<< HEAD
 
     if artist and title and audio_file:
         # Überprüfen, ob eine Datei hochgeladen wurde
@@ -132,22 +101,6 @@ def learn_workflow():
             
             st.success("Song processed successfully!")
      
-=======
-    if artist and title and audio_file:
-    # Überprüfen, ob eine Datei hochgeladen wurde
-        if isinstance(audio_file, BytesIO):
-            # Button zum Hinzufügen des Songs
-            if st.button("Add"):
-                # Song zur Datenbank hinzufügen
-                add_song_to_database(artist, title, audio_file)
-                st.success("Song added successfully!")
-        else:
-            st.error("Please upload an audio file.")
-             # Verarbeitung der Songs auslösen
-    if st.button("Process Song"):
-                process_uploaded_song(artist, title, audio_file)
-                st.success("Song processed successfully!")   
->>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
 
 
 
@@ -157,11 +110,7 @@ def recognize_workflow():
 
     with st.container():
         selected2 = option_menu(None, ["Via Upload", "Via Microphone"], 
-<<<<<<< HEAD
         icons=['cloud-upload', 'bi bi-mic'], 
-=======
-        icons=['house', 'cloud-upload', "list-task", 'gear'], 
->>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
         menu_icon="cast", default_index=0, orientation="horizontal")
 
     if selected2 == "Via Upload":
@@ -192,20 +141,12 @@ def recognize_workflow():
                         return
 
                     # Führe die Erkennungsfunktion durch und zeige das Ergebnis an
-<<<<<<< HEAD
                     result = recognize_song(tmp_file_name, db_connector)
-=======
-                    result = recognize_song_id(tmp_file_name, db_connector)
->>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
                     print(result)
 
                     # Zeige das Ergebnis an, wenn es vorhanden ist
                     if result:
-<<<<<<< HEAD
                         st.success(f"Music identified as '{result.title}' from Artist '{result.artist}'.")
-=======
-                        st.success(f"Music identified as '{result.title}' from '{result.artist}'.")
->>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
 
                         #st.audio(result.file_path, format='audio/mp3')
                     else:
@@ -213,7 +154,6 @@ def recognize_workflow():
 
 
     elif selected2 == "Via Microphone":
-<<<<<<< HEAD
         db_connector = DatabaseConnector()
         if st.button("Start Recording"):
             with st.spinner("Recording..."):
@@ -254,27 +194,6 @@ def Administration():
 with st.container():
     selected2 = option_menu(None, ["Register", "Recognise", "Administration"], 
     icons=['bi bi-plus-circle', 'bi bi-database', "bi bi-gear"], 
-=======
-        if st.button("Start Recording"):
-            db_connector = sqlite3.connect('my_database.db')  # Stelle die Verbindung zur Datenbank her
-
-
-
-            with st.spinner("Processing..."):
-                result, audio = recognize_song_via_mic()
-                st.audio(audio, format='audio/wav')                            # Übergebe den Dateipfad der temporären Datei an deine Funktion
-
-            if result:
-                st.success(f"Music identified as '{result.title}'.")
-                st.write(f"Artist: {result.artist}")
-                st.audio(result.file_path, format='audio/mp3')
-            else:
-                st.error("No match found.")
-
-with st.container():
-    selected2 = option_menu(None, ["Register", "Recognise"], 
-    icons=['bi bi-plus-circle', 'bi bi-database', "list-task", 'gear'], 
->>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
     menu_icon="cast", default_index=0, orientation="horizontal")
 
 if __name__ == "__main__":
@@ -283,10 +202,6 @@ if __name__ == "__main__":
 
     elif selected2 == "Recognise":
         recognize_workflow()
-<<<<<<< HEAD
 
     elif selected2 == "Administration":
         Administration()
-=======
-   
->>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62

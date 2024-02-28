@@ -13,14 +13,9 @@ import sqlite3
 import sounddevice as sd
 import noisereduce as nr
 import pyaudio
-<<<<<<< HEAD
 from pydub import AudioSegment
 import wave
 import soundfile as sf
-=======
-import wave
-import tempfile
->>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
 
 def create_constellation(audio, Fs):
     
@@ -53,16 +48,11 @@ def create_constellation(audio, Fs):
             constellation_map.append([t_idx, frequency])                       #Hinzufügen der Peaks zum Constellation Map
 
     plt.scatter(*zip(*constellation_map))
-<<<<<<< HEAD
     
     return constellation_map
 
 
 
-=======
-    return constellation_map
-
->>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
 def create_hashes(constellation_map, song_id=None):
     hashes = {}
 
@@ -71,7 +61,6 @@ def create_hashes(constellation_map, song_id=None):
 
     for idx, (time, freq) in enumerate(constellation_map):
         
-<<<<<<< HEAD
         for other_t, other_freq in constellation_map[idx : idx + 50]: 
             dif = other_t - time
             
@@ -80,12 +69,6 @@ def create_hashes(constellation_map, song_id=None):
                     hash = int(freq_binned) | (int(other_freq_binned) << 10) | (int(dif) << 20)
                     hashes[hash] = (time, song_id)
   
-=======
-        for other_t, other_freq in constellation_map[idx : idx + 100]: 
-            dif = other_t - time
-            
-            if dif <= 1 or dif > 10:
->>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
                 continue
 
             
@@ -133,7 +116,6 @@ def process_uploaded_song(artist, title, audio_file):
     audio, sr = librosa.load(audio_file_path)
     constellation_map = create_constellation(audio, sr)
     hashes = create_hashes(constellation_map)
-<<<<<<< HEAD
     print(f"Created {len(hashes)} hashes")
     process_song(artist, title, audio_file_path, hashes, db_connector)
 
@@ -186,8 +168,3 @@ def record_audio(filename=None):
     return np.hstack(frames)
 
 
-=======
-    process_song(artist, title, audio_file_path, hashes, db_connector)
-
-
->>>>>>> 30b42035201db0f5eae2a0d32045468fa9214d62
