@@ -1,16 +1,17 @@
 # Abschlussprojekt-Softwaredesign
 Musikerkennung Software
 
-Installation
-------------
+Installation für pydub: ffmpeg installieren -> https://phoenixnap.com/kb/ffmpeg-windows  
 
-für pydub: ffmpeg installieren -> https://phoenixnap.com/kb/ffmpeg-windows  
+--------------------------------------------
 
 Branch Mindestanforderung: 
 -Mindestanforderungen wurden erfüllt
 -SQL Datenbank wurde implementiert
 -Tests wurden durchgeführt
 -Songs können verarbeitet werden und via upload erkannt werden
+
+--------------------------------------------
 
 Dateien für Software:
 -requirements.txt
@@ -23,6 +24,10 @@ Dateien für Software:
 -database.sql
 -queries.py
 -songs.py
+
+--------------------------------------------
+database.db mit git sfl hochgeladen, da viele hashes zum besseren songerkennen benötigt werden
+--------------------------------------------
 
 
 
