@@ -26,7 +26,9 @@ Dateien für Software:
 -songs.py
 
 --------------------------------------------
-database.db mit git sfl hochgeladen, da viele hashes zum besseren songerkennen benötigt werden
+-database.db mit git sfl hochgeladen, da viele hashes zum besseren songerkennen benötigt werden
+
+-je lauter und näher am Mikrofon der Song abgespielt wird, desto besser wird erkannt
 --------------------------------------------
 
 
