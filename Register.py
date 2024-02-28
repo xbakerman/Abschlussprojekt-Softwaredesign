@@ -61,7 +61,7 @@ def create_hashes(constellation_map, song_id=None):
 
     for idx, (time, freq) in enumerate(constellation_map):
         
-        for other_t, other_freq in constellation_map[idx : idx + 50]: 
+        for other_t, other_freq in constellation_map[idx : idx + 75]: 
             dif = other_t - time
             
             if dif <= 1 or dif > 10:

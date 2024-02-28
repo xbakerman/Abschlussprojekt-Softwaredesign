@@ -35,7 +35,7 @@ def find_best_match(hashes, db_connector):
     best_song = songs.load_by_title(song_id)
 
     if best_song:
-        if best_match[1][1] >= 100:
+        if best_match[1][1] >= 50:
             print(f"Beste Übereinstimmung: {best_song.title}, Score: {best_match[1][1]}")
             print(f"Artist: {best_song.artist}, File Path: {best_song.file_path}")
             return best_song
