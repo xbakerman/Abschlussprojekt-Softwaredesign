@@ -5,6 +5,7 @@ from songs import songs
 import sqlite3
 from Register import create_Fingerprints, create_hashes, record_audio
 import logging
+from collections import defaultdict
 
 
 
@@ -39,8 +40,10 @@ def find_best_match(hashes, db_connector):
 
 
 
+
+
 def score_hashes(hashes, db_connector):
-    matches_per_song = {}
+    matches_per_song = defaultdict(list)
     conn = sqlite3.connect('my_database.db')
 
     c = conn.cursor()
@@ -50,28 +53,20 @@ def score_hashes(hashes, db_connector):
         matching_occurrences = c.fetchall()
 
         for source_time, song_index in matching_occurrences:
-
-            if song_index not in matches_per_song:
-                matches_per_song[song_index] = []
-
             matches_per_song[song_index].append((hash, sample_time, source_time))
 
     scores = {}
+
     for song_index, matches in matches_per_song.items():
-        song_scores_by_offset = {}
+        song_scores_by_offset = defaultdict(int)
 
         for hash, sample_time, source_time in matches:
             delta = abs(source_time - sample_time)
-
-            if delta not in song_scores_by_offset:
-                song_scores_by_offset[delta] = 0
             song_scores_by_offset[delta] += 1
 
-        max_offset = max(song_scores_by_offset, key=song_scores_by_offset.get)
-        max_score = song_scores_by_offset[max_offset]
+        max_offset, max_score = max(song_scores_by_offset.items(), key=lambda x: x[1])
         scores[song_index] = (max_offset, max_score)
 
-    
     scores = sorted(scores.items(), key=lambda x: x[1][1], reverse=True)
 
     return scores

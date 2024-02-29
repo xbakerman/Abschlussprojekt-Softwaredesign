@@ -19,28 +19,25 @@ def create_Fingerprints(audio, Fs):
 
     
     amount_to_pad = window_l_sa - audio.size % window_l_sa
-
     song_input = np.pad(audio, (0, amount_to_pad))
-
-    
     freq, times, stft = signal.stft(song_input, Fs, nperseg=window_l_sa, nfft=window_l_sa, return_onesided=True)
 
     constellation_map = []
 
-    for t_idx, window in enumerate(stft.T):                                    #Iterieren über die Fenster 
-        
-        spectrum = abs(window)                                                 #Berechnen des Spektrums
-        
-        peaks, props = signal.find_peaks(spectrum, prominence=0, distance=200) #Finden der Peaks im Spektrum
+    for time_index, window in enumerate(stft.T):
+        spectrum = abs(window)
+        peak_indices, _ = signal.find_peaks(spectrum, prominence=0, distance=200)
+        n_peaks = min(15, len(peak_indices))
+        largest_peaks = np.argpartition(spectrum[peak_indices], -n_peaks)[-n_peaks:]
 
-        n_peaks = min(n_peaks, len(peaks))
-        
-        largest_peaks = np.argpartition(props["prominences"], -n_peaks)[-n_peaks:] 
-        for peak in peaks[largest_peaks]:                                      #Iterieren über die Peaks
-            frequency = freq[peak]
-            constellation_map.append([t_idx, frequency])                       #Hinzufügen der Peaks zum Constellation Map
+        for peak_index in peak_indices[largest_peaks]:
+            frequency = freq[peak_index]
+            constellation_map.append([time_index, frequency])                       #Hinzufügen der Peaks zum Constellation Map
 
     plt.scatter(*zip(*constellation_map))
+    plt.xlabel('Time Index')
+    plt.ylabel('Frequency')
+    plt.title('Constellation Map')
     
     return constellation_map
 
@@ -53,26 +50,25 @@ def create_hashes(constellation_map, song_id=None):
     freq_bits = 10
 
     for idx, (time, freq) in enumerate(constellation_map):
-        
-        for other_t, other_freq in constellation_map[idx : idx + 75]: 
+        for other_idx in range(idx + 1, min(idx + 76, len(constellation_map))):
+            other_t, other_freq = constellation_map[other_idx]
             dif = other_t - time
             
             if dif <= 1 or dif > 10:
                 if freq > high_frequency * 0.8:  
-                    hash = int(freq_binned) | (int(other_freq_binned) << 10) | (int(dif) << 20)
-                    hashes[hash] = (time, song_id)
-  
+                    freq_binned = freq / high_frequency * (2 ** freq_bits)
+                    other_freq_binned = other_freq / high_frequency * (2 ** freq_bits)
+                    hash_value = int(freq_binned) | (int(other_freq_binned) << 10) | (int(dif) << 20)
+                    hashes[hash_value] = (time, song_id)
                 continue
 
-            
             freq_binned = freq / high_frequency * (2 ** freq_bits)
             other_freq_binned = other_freq / high_frequency * (2 ** freq_bits)
-
-            hash = int(freq_binned) | (int(other_freq_binned) << 10) | (int(dif) << 20)
-
-            hashes[hash] = (time, song_id)
+            hash_value = int(freq_binned) | (int(other_freq_binned) << 10) | (int(dif) << 20)
+            hashes[hash_value] = (time, song_id)
 
     return hashes
+
 
 
 
@@ -84,10 +80,10 @@ def process_song(artist, title, audio_file_path, hashes, db_connector):
     if song:
         
         audio, sr = librosa.load(audio_file_path)
-    
         constellation_map = create_Fingerprints(audio, sr)
-        
+
         hashes = create_hashes(constellation_map, song.id)
+        print(f"Created {len(hashes)} hashes")
         
         songs.store_hashes(hashes, song.id)
     else:
@@ -104,12 +100,12 @@ def process_uploaded_song(artist, title, audio_file):
     with open(audio_file_path, "wb") as f:
         f.write(audio_file.read())
     
-    
-    
     audio, sr = librosa.load(audio_file_path)
     constellation_map = create_Fingerprints(audio, sr)
+
     hashes = create_hashes(constellation_map)
     print(f"Created {len(hashes)} hashes")
+
     process_song(artist, title, audio_file_path, hashes, db_connector)
 
 
