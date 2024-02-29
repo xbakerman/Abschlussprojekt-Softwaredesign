@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from database_start import DatabaseConnector
-from tinydb import Query
 import os
 import sqlite3
 from abc import ABC, abstractmethod
@@ -37,11 +36,11 @@ class Serializable(ABC):
       
 
       if result:
-          # Aktualisieren Sie die Felder 'title', 'artist' und 'file_path' für den Song mit dieser ID
+          
           c.execute(f"UPDATE {self.__class__.__name__} SET title=?, artist=?, file_path=? WHERE id=?", (self.title, self.artist, self.file_path, self.id))
           print("  Data updated.")
       else:
-          # Fügen Sie einen neuen Song mit diesen Feldern ein
+          
           c.execute(f"INSERT INTO {self.__class__.__name__} (id, title, artist, file_path) VALUES (?, ?, ?, ?)", (self.id, self.title, self.artist, self.file_path))
           print("  Data inserted.")
       conn.commit()
@@ -53,7 +52,7 @@ class Serializable(ABC):
         c.execute(f"DELETE FROM {self.__class__.__name__} WHERE id=?", (self.id,))
         c.execute("DELETE FROM hashes WHERE song_id=?", (self.id,))
 
-            # Datei aus dem Ordner löschen
+            
         if self.file_path:
             if os.path.exists(self.file_path):
                 os.remove(self.file_path)

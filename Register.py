@@ -1,23 +1,17 @@
-import os
+
 import librosa
 import librosa.display
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import fft, signal
-import hashlib
 from database_start import DatabaseConnector
 from songs import songs
-from scipy.io.wavfile import read
-from tinydb import Query
-import sqlite3
 import sounddevice as sd
-import noisereduce as nr
 import pyaudio
-from pydub import AudioSegment
 import wave
-import soundfile as sf
 
-def create_constellation(audio, Fs):
+
+def create_Fingerprints(audio, Fs):
     
     window_l_s = 0.5                    #Fensterlänge in Sekunden
     window_l_sa = int(window_l_s * Fs)  #Fensterlänge in Samples
@@ -30,7 +24,7 @@ def create_constellation(audio, Fs):
     song_input = np.pad(audio, (0, amount_to_pad))
 
     
-    freq, times, stft = signal.stft(song_input, Fs, nperseg=window_l_sa, nfft=window_l_sa, return_onesided=True)
+    freq, stft = signal.stft(song_input, Fs, nperseg=window_l_sa, nfft=window_l_sa, return_onesided=True)
 
     constellation_map = []
 
@@ -43,6 +37,7 @@ def create_constellation(audio, Fs):
         n_peaks = min(n_peaks, len(peaks))
         
         largest_peaks = np.argpartition(props["prominences"], -n_peaks)[-n_peaks:] 
+
         for peak in peaks[largest_peaks]:                                      #Iterieren über die Peaks
             frequency = freq[peak]
             constellation_map.append([t_idx, frequency])                       #Hinzufügen der Peaks zum Constellation Map
@@ -65,7 +60,8 @@ def create_hashes(constellation_map, song_id=None):
             dif = other_t - time
             
             if dif <= 1 or dif > 10:
-                if freq > high_frequency * 0.8:  
+
+                if freq > high_frequency * 0.7:                                                 #mehr hashes im höheren Frequenzbereich
                     hash = int(freq_binned) | (int(other_freq_binned) << 10) | (int(dif) << 20)
                     hashes[hash] = (time, song_id)
   
@@ -92,7 +88,7 @@ def process_song(artist, title, audio_file_path, hashes, db_connector):
         
         audio, sr = librosa.load(audio_file_path)
     
-        constellation_map = create_constellation(audio, sr)
+        constellation_map = create_Fingerprints(audio, sr)
         
         hashes = create_hashes(constellation_map, song.id)
         
@@ -114,7 +110,7 @@ def process_uploaded_song(artist, title, audio_file):
     
     
     audio, sr = librosa.load(audio_file_path)
-    constellation_map = create_constellation(audio, sr)
+    constellation_map = create_Fingerprints(audio, sr)
     hashes = create_hashes(constellation_map)
     print(f"Created {len(hashes)} hashes")
     process_song(artist, title, audio_file_path, hashes, db_connector)
