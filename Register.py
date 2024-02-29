@@ -1,4 +1,3 @@
-
 import librosa
 import librosa.display
 import matplotlib.pyplot as plt
@@ -24,7 +23,7 @@ def create_Fingerprints(audio, Fs):
     song_input = np.pad(audio, (0, amount_to_pad))
 
     
-    freq, stft = signal.stft(song_input, Fs, nperseg=window_l_sa, nfft=window_l_sa, return_onesided=True)
+    freq, times, stft = signal.stft(song_input, Fs, nperseg=window_l_sa, nfft=window_l_sa, return_onesided=True)
 
     constellation_map = []
 
@@ -37,7 +36,6 @@ def create_Fingerprints(audio, Fs):
         n_peaks = min(n_peaks, len(peaks))
         
         largest_peaks = np.argpartition(props["prominences"], -n_peaks)[-n_peaks:] 
-
         for peak in peaks[largest_peaks]:                                      #Iterieren über die Peaks
             frequency = freq[peak]
             constellation_map.append([t_idx, frequency])                       #Hinzufügen der Peaks zum Constellation Map
@@ -60,8 +58,7 @@ def create_hashes(constellation_map, song_id=None):
             dif = other_t - time
             
             if dif <= 1 or dif > 10:
-
-                if freq > high_frequency * 0.7:                                                 #mehr hashes im höheren Frequenzbereich
+                if freq > high_frequency * 0.8:  
                     hash = int(freq_binned) | (int(other_freq_binned) << 10) | (int(dif) << 20)
                     hashes[hash] = (time, song_id)
   
