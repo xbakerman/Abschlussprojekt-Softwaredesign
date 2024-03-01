@@ -28,6 +28,14 @@ Dateien für Software:
 - database.sql
 - queries.py
 - songs.py
+- duckduckgo_integration.py
+- youtube_integration.py
+
+--------------------------------------------
+Erweiterungen:
+- Songerkennung via Mikrofon
+- Albumcover 
+- Youtube Link
 
 --------------------------------------------
 Anmerkungen:
