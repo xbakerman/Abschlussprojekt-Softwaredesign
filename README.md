@@ -42,6 +42,8 @@ Anmerkungen:
 - je lauter und näher am Mikrofon der Song abgespielt wird, desto besser wird erkannt
 - In den Systemeinstellungen vom PC für Mikrofon 44100Hz einstellen!!
 - Im Bericht ist eine detaillierte Beschreibung des Projekts zu finden
+- Audiodatei vom hochgeladenen Song wird im "Samples" Ordner gespeichert
+- recorded_audio.wav ist die aufgenommene Audiodatei vom Mikrofon (wird überschrieben)
 --------------------------------------------
 
 
