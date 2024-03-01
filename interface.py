@@ -8,11 +8,8 @@ from streamlit_option_menu import option_menu
 from Recognise import recognize_song, record_and_recognize
 import tempfile
 import sqlite3
-
-
-
-
-
+from duckduckgo_integration import get_album_cover
+from youtube_integration import link_youtube
 
 # Logo einbinden
 logo_path = "Logo.jpg"  # Passe den Pfad zu deinem Logo an
@@ -31,6 +28,7 @@ col1.image(logo_image, use_column_width=False, width=200)  # Passe die Breite na
 # In der zweiten Spalte die Willkommensnachricht platzieren
 col2.title(welcome_message)
 
+                          
 def add_song_to_database(artist, title, audio_file):
     # Verbindung zur Datenbank herstellen
     db_connector = DatabaseConnector()
@@ -86,7 +84,7 @@ def learn_workflow():
                     # Song zur Datenbank hinzufügen
                     add_song_to_database(artist, title, audio_file)
                     # Verarbeitung des hochgeladenen Songs
-                    
+                
                     
                     st.success("Song added successfully!")
         else:
@@ -100,8 +98,8 @@ def learn_workflow():
             process_uploaded_song(artist, title, audio_file)
             
             st.success("Song processed successfully!")
+            st.audio(audio_file, format='audio/mp3')
      
-
 
 
 def recognize_workflow():
@@ -151,6 +149,11 @@ def recognize_workflow():
                         st.write("Song:")
                         st.success(f"Music identified as '{result.title}' from Artist '{result.artist}'.")
                         st.audio(result.file_path, format='audio/mp3')
+                        video = link_youtube(result.title, result.artist)
+                        st.video(video)
+
+                        Image = get_album_cover(result.title, result.artist)
+                        st.image(Image, caption=f"Album Cover for {result.title} by {result.artist}", use_column_width=True)
 
                         #st.audio(result.file_path, format='audio/mp3')
                     else:
@@ -171,8 +174,10 @@ def recognize_workflow():
                 st.write("Song:")
                 st.success(f"Music identified as '{result.title}' from Artist '{result.artist}'.")
                 st.audio(result.file_path, format='audio/mp3')
-                
-                
+                Image = get_album_cover(result.title, result.artist)
+                st.image(Image, caption=f"Album Cover for {result.title} by {result.artist}", use_column_width=True)
+                video = link_youtube(result.title, result.artist)
+                st.video(video)
             else:
                 st.error("No match found.")
 
