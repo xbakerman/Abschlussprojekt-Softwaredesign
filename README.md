@@ -1,5 +1,5 @@
-# Abschlussprojekt-Softwaredesign
-Musikerkennung Software
+# Abschlussprojekt-Softwaredesign 
+Musikerkennung Software 
 
 Installationsanleitung:
 1. Installieren Sie Git LFS auf Ihrem System. Die Installationsanweisungen finden Sie auf der
@@ -40,10 +40,12 @@ Erweiterungen:
 --------------------------------------------
 Anmerkungen:
 - je lauter und näher am Mikrofon der Song abgespielt wird, desto besser wird erkannt
+- erlebnisereicher Ausschnitt Im Song vorteilhafter für die Erkennung
 - In den Systemeinstellungen vom PC für Mikrofon 44100Hz einstellen!!
 - Im Bericht ist eine detaillierte Beschreibung des Projekts zu finden
 - Audiodatei vom hochgeladenen Song wird im "Samples" Ordner gespeichert
 - recorded_audio.wav ist die aufgenommene Audiodatei vom Mikrofon (wird überschrieben)
+- Finale Version der Software ist im Main Branch
 --------------------------------------------
 
 
