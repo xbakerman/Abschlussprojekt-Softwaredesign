@@ -8,11 +8,11 @@ def link_youtube(title, artist):
 
     if response.status_code == 200:
         video = None
-        start_index = response.text.find('{"videoRenderer":{"videoId":"')
+        start_idx = response.text.find('{"videoRenderer":{"videoId":"')
         
-        if start_index != -1:
-            end_index = response.text.find('"', start_index + 30)
-            video = response.text[start_index + 29:end_index]
+        if start_idx != -1:
+            end_idx = response.text.find('"', start_idx + 30)
+            video = response.text[start_idx + 29:end_idx]
         if video:
             return f"https://www.youtube.com/watch?v={video}"
     return None
