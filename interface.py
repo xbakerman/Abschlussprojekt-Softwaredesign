@@ -98,6 +98,7 @@ def learn_workflow():
             process_uploaded_song(artist, title, audio_file)
             
             st.success("Song processed successfully!")
+            st.audio(audio_file, format='audio/mp3')
      
 
 
