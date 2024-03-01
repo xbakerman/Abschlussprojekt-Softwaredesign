@@ -1,15 +1,18 @@
 # Abschlussprojekt-Softwaredesign
 Musikerkennung Software
 
-Installation für pydub: ffmpeg installieren -> https://phoenixnap.com/kb/ffmpeg-windows  
-
---------------------------------------------
-
-Branch Mindestanforderung: 
-- Mindestanforderungen wurden erfüllt
-- SQL Datenbank wurde implementiert
-- Tests wurden durchgeführt
-- Songs können verarbeitet werden und via upload erkannt werden
+Installationsanleitung:
+1. Installieren Sie Git LFS auf Ihrem System. Die Installationsanweisungen finden Sie auf der
+offiziellen Git LFS Webseite(https://git-lfs.github.com/)
+2. Initialisieren Sie Git LFS in GitBash: ”git lfs install”
+3. Installation für pydub: ffmpeg installieren -> https://phoenixnap.com/kb/ffmpeg-windows 
+3. Klonen Sie das Repository: ”git clone https://github.com/xbakerman/Abschlussprojekt-Softwaredesign.git”
+4. Wechseln Sie in das Verzeichnis des geklonten Repositories: ”cd Abschlussprojekt-Softwaredesign”
+5. Erstellen Sie eine virtuelle Umgebung und aktivieren Sie sie: ”python3 -m venv venv”
+”source venv/bin/activate” On Windows, use ”venv\Scripts\activate”
+6. Installieren Sie die ben¨otigten Python-Pakete: ”pip install -r requirements.txt”
+7. Um die Datenbank zu ¨offnen kann eine Extension wie ”SQLite Viewer”verwendet werden
+8. Um die Software zu starten, führen Sie die Datei interface.py aus: ”streamlit run interface.py”
 
 --------------------------------------------
 
@@ -27,10 +30,10 @@ Dateien für Software:
 - songs.py
 
 --------------------------------------------
-- database.db mit git sfl hochgeladen, da viele hashes zum besseren songerkennen benötigt werden ("git lfs install" vor dem klonen ausführen)
-
+Anmerkungen:
 - je lauter und näher am Mikrofon der Song abgespielt wird, desto besser wird erkannt
 - In den Systemeinstellungen vom PC für Mikrofon 44100Hz einstellen!!
+- Im Bericht ist eine detaillierte Beschreibung des Projekts zu finden
 --------------------------------------------
 
 
