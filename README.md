@@ -30,6 +30,7 @@ Dateien für Software:
 - database.db mit git sfl hochgeladen, da viele hashes zum besseren songerkennen benötigt werden ("git lfs install" vor dem klonen ausführen)
 
 - je lauter und näher am Mikrofon der Song abgespielt wird, desto besser wird erkannt
+- In den Systemeinstellungen vom PC für Mikrofon 44100Hz einstellen!!
 --------------------------------------------
 
 

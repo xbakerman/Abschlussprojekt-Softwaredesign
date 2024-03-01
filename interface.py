@@ -107,6 +107,7 @@ def learn_workflow():
 def recognize_workflow():
     global result
     st.header("Identify Music")
+ 
 
     with st.container():
         selected2 = option_menu(None, ["Via Upload", "Via Microphone"], 
@@ -147,8 +148,8 @@ def recognize_workflow():
 
                     # Zeige das Ergebnis an, wenn es vorhanden ist
                     if result:
-                        st.success(f"Music identified as '{result.title}' from Artist '{result.artist}'.")
                         st.write("Song:")
+                        st.success(f"Music identified as '{result.title}' from Artist '{result.artist}'.")
                         st.audio(result.file_path, format='audio/mp3')
 
                         #st.audio(result.file_path, format='audio/mp3')
@@ -161,11 +162,13 @@ def recognize_workflow():
         if st.button("Start Recording"):
             with st.spinner("Recording..."):
                 result = record_and_recognize()
+                st.write("Snippet:")
                 st.audio("recorded_audio.wav", format='audio/wav')
             
 
             # Zeige das Ergebnis an, wenn es vorhanden ist
             if result:
+                st.write("Song:")
                 st.success(f"Music identified as '{result.title}' from Artist '{result.artist}'.")
                 st.audio(result.file_path, format='audio/mp3')
                 
