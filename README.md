@@ -47,7 +47,9 @@ Anmerkungen:
 - recorded_audio.wav ist die aufgenommene Audiodatei vom Mikrofon (wird überschrieben)
 - Finale Version der Software ist im Main Branch
 --------------------------------------------
-
+Quellen: 
+- https://www.cameronmacleod.com/blog/how-does-shazam-work 
+- https://michaelstrauss.dev/shazam-in-python 
 
 
 
